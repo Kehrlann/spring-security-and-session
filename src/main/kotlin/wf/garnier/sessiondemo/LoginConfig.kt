@@ -10,10 +10,12 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.userdetails.User
+import org.springframework.security.web.savedrequest.NullRequestCache
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession
-import org.springframework.session.web.context.AbstractHttpSessionApplicationInitializer
+import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices
+import org.springframework.session.web.http.HeaderHttpSessionIdResolver
+import org.springframework.session.web.http.HttpSessionIdResolver
 import org.springframework.transaction.PlatformTransactionManager
 import javax.sql.DataSource
 
@@ -41,14 +43,26 @@ class LoginConfig : WebSecurityConfigurerAdapter() {
 
                 // only create a session when trying to access endpoints
                 .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .requestCache()
+                .requestCache(NullRequestCache())
 
                 // allow same-origin frame options, to be able to access the embedded h2 console
                 .and()
                 .headers()
                 .frameOptions()
                 .sameOrigin()
+
+                // session is valid forever (here this is an embedded DB, so whenever the app restarts
+                // the session will be purged)
+                .and()
+                .rememberMe()
+                .rememberMeServices(
+                        SpringSessionRememberMeServices()
+                                .apply {
+                                    this.setAlwaysRemember(true)
+                                    this.setValiditySeconds(Int.MAX_VALUE)
+                                }
+                )
     }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
@@ -69,6 +83,7 @@ class LoginConfig : WebSecurityConfigurerAdapter() {
     fun transactionManager(dataSource: DataSource): PlatformTransactionManager {
         return DataSourceTransactionManager(dataSource) // <3>
     }
-}
 
-class Initializer : AbstractHttpSessionApplicationInitializer(WebSecurityConfigurerAdapter::class.java)
+    @Bean
+    fun sessionResolver(): HttpSessionIdResolver = HeaderHttpSessionIdResolver.xAuthToken()
+}
