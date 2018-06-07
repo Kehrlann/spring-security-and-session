@@ -23,21 +23,32 @@ import javax.sql.DataSource
 class LoginConfig : WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
-        http.authorizeRequests()
+
+        http
+                // Add authentication for everything under /api
+                .authorizeRequests()
                 .antMatchers("/api/**").authenticated()
+
+                // disable CSRF, which only useful when you're doing web stuff
                 .and()
                 .csrf().disable()
+
+                // enable form-login, to be able to call /login with username and password and get a cookie
                 .formLogin()
                 .permitAll()
                 .loginProcessingUrl("/login")
                 .permitAll()
+
+                // only create a session when trying to access endpoints
+                .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+
+                // allow same-origin frame options, to be able to access the embedded h2 console
                 .and()
                 .headers()
                 .frameOptions()
                 .sameOrigin()
-                .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
     }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
