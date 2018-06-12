@@ -1,7 +1,8 @@
-package wf.garnier.sessiondemo
+package wf.garnier.sessiondemo.login
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpStatus
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
@@ -11,7 +12,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.core.userdetails.User
+import org.springframework.security.crypto.password.NoOpPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.savedrequest.NullRequestCache
+import org.springframework.session.config.annotation.web.http.EnableSpringHttpSession
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession
 import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver
@@ -21,8 +25,9 @@ import javax.sql.DataSource
 
 @Configuration
 @EnableWebSecurity
-@EnableJdbcHttpSession
-class LoginConfig : WebSecurityConfigurerAdapter() {
+//@EnableJdbcHttpSession
+@EnableSpringHttpSession
+class LoginConfig(val userDetailsService: CustomUserDetailsService): WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
 
@@ -37,9 +42,12 @@ class LoginConfig : WebSecurityConfigurerAdapter() {
 
                 // enable form-login, to be able to call /login with username and password and get a cookie
                 .formLogin()
-                .permitAll()
                 .loginProcessingUrl("/login")
-                .permitAll()
+                .successHandler { _, response, _ -> response.status = HttpStatus.OK.value() }
+                .failureHandler { _, response, _ -> response.status = HttpStatus.UNAUTHORIZED.value() }
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint { _, response, _ -> response.status = HttpStatus.UNAUTHORIZED.value() }
 
                 // only create a session when trying to access endpoints
                 .and()
@@ -66,24 +74,30 @@ class LoginConfig : WebSecurityConfigurerAdapter() {
     }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
-        val user = User.withUsername("user").password("{noop}password").roles("USER").build()
-        auth.inMemoryAuthentication()
-                .withUser(user)
+//        val user = User.withUsername("user").password("{noop}password").roles("USER").build()
+//        auth.inMemoryAuthentication()
+//                .withUser(user)
+
+        auth.userDetailsService(userDetailsService)
+                .passwordEncoder(NoOpPasswordEncoder.getInstance())
     }
 
 
-    @Bean
-    fun dataSource(): EmbeddedDatabase {
-        return EmbeddedDatabaseBuilder() // <2>
-                .setType(EmbeddedDatabaseType.H2)
-                .addScript("org/springframework/session/jdbc/schema-h2.sql").build()
-    }
+//    // Create H2 session database
+//    @Bean
+//    fun dataSource(): EmbeddedDatabase {
+//        return EmbeddedDatabaseBuilder()
+//                .setType(EmbeddedDatabaseType.H2)
+//                .addScript("org/springframework/session/jdbc/schema-h2.sql").build()
+//    }
+//
+//    // WAT DIS ?
+//    @Bean
+//    fun transactionManager(dataSource: DataSource): PlatformTransactionManager {
+//        return DataSourceTransactionManager(dataSource) // <3>
+//    }
 
-    @Bean
-    fun transactionManager(dataSource: DataSource): PlatformTransactionManager {
-        return DataSourceTransactionManager(dataSource) // <3>
-    }
-
+    // Use X-Auth-Token instead of SESSION cookie
     @Bean
     fun sessionResolver(): HttpSessionIdResolver = HeaderHttpSessionIdResolver.xAuthToken()
 }
