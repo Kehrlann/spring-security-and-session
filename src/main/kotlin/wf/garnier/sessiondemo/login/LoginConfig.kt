@@ -25,8 +25,7 @@ import javax.sql.DataSource
 
 @Configuration
 @EnableWebSecurity
-//@EnableJdbcHttpSession
-@EnableSpringHttpSession
+@EnableJdbcHttpSession
 class LoginConfig(val userDetailsService: CustomUserDetailsService): WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
@@ -74,28 +73,9 @@ class LoginConfig(val userDetailsService: CustomUserDetailsService): WebSecurity
     }
 
     override fun configure(auth: AuthenticationManagerBuilder) {
-//        val user = User.withUsername("user").password("{noop}password").roles("USER").build()
-//        auth.inMemoryAuthentication()
-//                .withUser(user)
-
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(NoOpPasswordEncoder.getInstance())
     }
-
-
-//    // Create H2 session database
-//    @Bean
-//    fun dataSource(): EmbeddedDatabase {
-//        return EmbeddedDatabaseBuilder()
-//                .setType(EmbeddedDatabaseType.H2)
-//                .addScript("org/springframework/session/jdbc/schema-h2.sql").build()
-//    }
-//
-//    // WAT DIS ?
-//    @Bean
-//    fun transactionManager(dataSource: DataSource): PlatformTransactionManager {
-//        return DataSourceTransactionManager(dataSource) // <3>
-//    }
 
     // Use X-Auth-Token instead of SESSION cookie
     @Bean
