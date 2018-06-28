@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 class UserInitializer(userRepository: UserRepository) {
 
     init {
-        val user = User(username = "user", password = "password")
+        val user = User(username = "user", clearTextPassword = "password")
         userRepository.save(user)
     }
 }

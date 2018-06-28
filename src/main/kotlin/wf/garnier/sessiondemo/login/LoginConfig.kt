@@ -3,25 +3,16 @@ package wf.garnier.sessiondemo.login
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.core.userdetails.User
-import org.springframework.security.crypto.password.NoOpPasswordEncoder
-import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.savedrequest.NullRequestCache
-import org.springframework.session.config.annotation.web.http.EnableSpringHttpSession
 import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession
 import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices
 import org.springframework.session.web.http.HeaderHttpSessionIdResolver
 import org.springframework.session.web.http.HttpSessionIdResolver
-import org.springframework.transaction.PlatformTransactionManager
-import javax.sql.DataSource
 
 @Configuration
 @EnableWebSecurity
@@ -74,7 +65,7 @@ class LoginConfig(val userDetailsService: CustomUserDetailsService): WebSecurity
 
     override fun configure(auth: AuthenticationManagerBuilder) {
         auth.userDetailsService(userDetailsService)
-                .passwordEncoder(NoOpPasswordEncoder.getInstance())
+                .passwordEncoder(BCryptPasswordEncoder(11))
     }
 
     // Use X-Auth-Token instead of SESSION cookie

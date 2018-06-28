@@ -13,7 +13,7 @@ class CustomUserDetailsService(val userRepo: UserRepository): UserDetailsService
         val user = userRepo.findByUsername(username)!!  // <-- will throw if user not found
 
         return User.withUsername(user.username)
-                .password(user.password)
+                .password(user.encryptedPassword)
                 .roles("USER")
                 .build()
     }
