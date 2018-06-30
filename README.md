@@ -3,4 +3,4 @@ Fun with Spring Session and Spring Security
 
 ## TODO
 
-- [ ] How to log out and delete session ?
+- [ ] Return 200 on successfull log out

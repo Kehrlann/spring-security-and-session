@@ -36,6 +36,9 @@ class LoginConfig(val userDetailsService: CustomUserDetailsService): WebSecurity
                 .successHandler { _, response, _ -> response.status = HttpStatus.OK.value() }
                 .failureHandler { _, response, _ -> response.status = HttpStatus.UNAUTHORIZED.value() }
                 .and()
+                .logout()
+                .logoutSuccessHandler { _, response, _ -> response.status = HttpStatus.OK.value() }
+                .and()
                 .exceptionHandling()
                 .authenticationEntryPoint { _, response, _ -> response.status = HttpStatus.UNAUTHORIZED.value() }
 
